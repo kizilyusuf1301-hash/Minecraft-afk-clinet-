@@ -1,0 +1,6 @@
+{
+  "appId": "com.mcafk.client",
+  "appName": "MC AFK Client",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
