@@ -1,0 +1,14 @@
+{
+  "name": "minecraft-afk-client",
+  "version": "1.0.0",
+  "description": "Android Minecraft AFK Client",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'Building web assets...'"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0"
+  }
+}
