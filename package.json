@@ -1,12 +1,16 @@
 {
   "name": "minecraft-afk-client",
   "version": "1.0.0",
-  "description": "Android Minecraft AFK Client",
-  "main": "index.js",
+  "description": "Android Minecraft AFK Client Pro (1.21.4 Support)",
+  "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "build": "echo 'Building web assets...'"
   },
   "dependencies": {
+    "mineflayer": "^4.23.0",
+    "express": "^4.19.2",
+    "ws": "^8.18.0",
     "@capacitor/android": "^6.0.0",
     "@capacitor/cli": "^6.0.0",
     "@capacitor/core": "^6.0.0"
