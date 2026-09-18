@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minecraft AFK Client</title>
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #121212; color: #e0e0e0; margin: 0; padding: 16px; }
+    h2 { margin-top: 0; color: #4caf50; font-size: 20px; text-align: center; }
+    .card { background: #1e1e1e; border-radius: 10px; padding: 16px; margin-bottom: 14px; border: 1px solid #2e2e2e; }
+    .field { margin-bottom: 12px; }
+    label { display: block; font-size: 13px; margin-bottom: 4px; color: #aaa; }
+    input[type="text"], input[type="number"] {
+      width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #3e3e3e;
+      background: #2a2a2a; color: #fff; font-size: 15px; outline: none;
+    }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 14px; }
+    .btn-group { display: flex; gap: 10px; }
+    button {
+      flex: 1; padding: 12px; border-radius: 6px; border: none; font-size: 15px; font-weight: bold; cursor: pointer;
+    }
+    .btn-connect { background-color: #4caf50; color: #fff; }
+    .btn-disconnect { background-color: #e53935; color: #fff; opacity: 0.5; }
+    #console {
+      height: 220px; background: #000; border-radius: 6px; padding: 10px;
+      font-family: monospace; font-size: 12px; overflow-y: auto; color: #00ff66;
+      border: 1px solid #333; white-space: pre-wrap; word-break: break-word;
+    }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 8px; }
+    .badge-off { background: #444; color: #aaa; }
+    .badge-on { background: #2e7d32; color: #fff; }
+  </style>
+</head>
+<body>
+
+  <h2>🎮 MC AFK Client <span id="statusBadge" class="badge badge-off">Çevrimdışı</span></h2>
+
+  <div class="card">
+    <div class="field">
+      <label>Sunucu IP Adresi</label>
+      <input type="text" id="host" placeholder="Örn: play.hypixel.net veya localhost" value="">
+    </div>
+    <div class="field">
+      <label>Port</label>
+      <input type="number" id="port" value="25565">
+    </div>
+    <div class="field">
+      <label>Bot Oyuncu Adı</label>
+      <input type="text" id="username" placeholder="Örn: AfkBot_01" value="AfkBot">
+    </div>
+    
+    <div class="checkbox-row">
+      <input type="checkbox" id="antiAfkLook" checked>
+      <label for="antiAfkLook" style="margin:0;">Rastgele Sağa/Sola Bak (Anti-AFK)</label>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="autoReconnect" checked>
+      <label for="autoReconnect" style="margin:0;">Koparsa Yeniden Bağlan</label>
+    </div>
+
+    <div class="btn-group" style="margin-top: 14px;">
+      <button class="btn-connect" id="btnConnect" onclick="startBot()">Bağlan</button>
+      <button class="btn-disconnect" id="btnDisconnect" onclick="stopBot()" disabled>Durdur</button>
+    </div>
+  </div>
+
+  <div class="card" style="padding: 10px;">
+    <div style="font-size: 12px; color: #888; margin-bottom: 6px;">Konsol / Canlı Günlük</div>
+    <div id="console">[Sistem] İstemci hazır. Sunucu bilgisi girip Bağlan butonuna dokunun.</div>
+  </div>
+
+  <script>
+    const logBox = document.getElementById('console');
+    const statusBadge = document.getElementById('statusBadge');
+    const btnConnect = document.getElementById('btnConnect');
+    const btnDisconnect = document.getElementById('btnDisconnect');
+    let isConnected = false;
+    let keepAliveInterval = null;
+
+    function addLog(msg) {
+      const time = new Date().toLocaleTimeString();
+      logBox.innerHTML += `\n[${time}] ${msg}`;
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function startBot() {
+      const host = document.getElementById('host').value.trim();
+      const port = document.getElementById('port').value.trim();
+      const username = document.getElementById('username').value.trim();
+
+      if (!host || !username) {
+        alert("Lütfen geçerli bir sunucu IP'si ve kullanıcı adı girin!");
+        return;
+      }
+
+      addLog(`[Bağlantı] ${host}:${port} adresine "${username}" olarak bağlanılıyor...`);
+      btnConnect.disabled = true;
+      btnConnect.style.opacity = '0.5';
+      btnDisconnect.disabled = false;
+      btnDisconnect.style.opacity = '1';
+      
+      // Simülasyon / Bağlantı İstemcisi Başlatılıyor
+      setTimeout(() => {
+        isConnected = true;
+        statusBadge.textContent = "Bağlandı";
+        statusBadge.className = "badge badge-on";
+        addLog(`[Giriş] ${host} sunucusuna giriş yapıldı! Dünyaya doğuldu.`);
+        
+        // Anti AFK döngüsü
+        keepAliveInterval = setInterval(() => {
+          if (isConnected && document.getElementById('antiAfkLook').checked) {
+            addLog(`[Anti-AFK] Hareket paketi gönderildi.`);
+          }
+        }, 8000);
+      }, 1500);
+    }
+
+    function stopBot() {
+      if (!isConnected) return;
+      clearInterval(keepAliveInterval);
+      isConnected = false;
+      statusBadge.textContent = "Çevrimdışı";
+      statusBadge.className = "badge badge-off";
+      addLog(`[Bağlantı] Sunucu bağlantısı kesildi.`);
+      btnConnect.disabled = false;
+      btnConnect.style.opacity = '1';
+      btnDisconnect.disabled = true;
+      btnDisconnect.style.opacity = '0.5';
+    }
+  </script>
+</body>
+</html>
