@@ -145,15 +145,118 @@
       <button onclick="sendChatMessage()">Gönder</button>
     </div>
   </div>
-
   <script>
     const logBox = document.getElementById('console');
     const statusBadge = document.getElementById('statusBadge');
     const btnConnect = document.getElementById('btnConnect');
     const btnDisconnect = document.getElementById('btnDisconnect');
     const chatInput = document.getElementById('chatInput');
+    const hpText = document.getElementById('hpText');
+    const foodText = document.getElementById('foodText');
+
+    let ws = null;
     let isConnected = false;
-    let loopInterval = null;
+
+    function initWebSocket() {
+      // Yerel arka plan motoruna bağlan
+      const wsUrl = `ws://${window.location.hostname || 'localhost'}:3000`;
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        addLog('[Sistem] Yerel arka plan motoruna bağlanıldı. Hazır.', '#38bdf8');
+      };
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.type === 'log') {
+          addLog(data.text, data.color);
+        } else if (data.type === 'status') {
+          isConnected = data.connected;
+          if (isConnected) {
+            statusBadge.textContent = "Bağlandı";
+            statusBadge.className = "badge badge-on";
+            btnConnect.disabled = true;
+            btnConnect.style.opacity = '0.5';
+            btnDisconnect.disabled = false;
+            btnDisconnect.style.opacity = '1';
+          } else {
+            statusBadge.textContent = "Bağlantı Yok";
+            statusBadge.className = "badge badge-off";
+            btnConnect.disabled = false;
+            btnConnect.style.opacity = '1';
+            btnDisconnect.disabled = true;
+            btnDisconnect.style.opacity = '0.4';
+          }
+        } else if (data.type === 'health') {
+          hpText.textContent = `${data.hp} / 20`;
+          foodText.textContent = `${data.food} / 20`;
+        }
+      };
+
+      ws.onclose = () => {
+        setTimeout(initWebSocket, 2000);
+      };
+    }
+
+    initWebSocket();
+
+    function addLog(msg, color = '#4ade80') {
+      const time = new Date().toLocaleTimeString();
+      logBox.innerHTML += `\n<span style="color:${color}">[${time}] ${msg}</span>`;
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function fillChat(text) {
+      chatInput.value = text;
+      chatInput.focus();
+    }
+
+    function sendChatMessage() {
+      const text = chatInput.value.trim();
+      if (!text || !ws) return;
+      ws.send(JSON.stringify({ action: 'CHAT', message: text }));
+      chatInput.value = '';
+    }
+
+    chatInput.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') sendChatMessage();
+    });
+
+    function startBot() {
+      const host = document.getElementById('host').value.trim();
+      const port = document.getElementById('port').value.trim();
+      const username = document.getElementById('username').value.trim();
+
+      if (!host || !username) {
+        alert("Lütfen geçerli bir sunucu IP'si ve bot adı gir!");
+        return;
+      }
+
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        alert("Arka plan motoruyla bağlantı kurulamadı. Lütfen birkaç saniye bekleyin.");
+        return;
+      }
+
+      ws.send(JSON.stringify({
+        action: 'CONNECT',
+        host: host,
+        port: port,
+        username: username,
+        antiAfkLook: document.getElementById('afkLook').checked,
+        antiAfkJump: document.getElementById('afkJump').checked,
+        antiAfkSwing: document.getElementById('afkSwing').checked
+      }));
+    }
+
+    function stopBot() {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ action: 'DISCONNECT' }));
+      }
+    }
+  </script>
+
+  
 
     function addLog(msg, color = '#4ade80') {
       const time = new Date().toLocaleTimeString();
